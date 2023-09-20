@@ -1,3 +1,5 @@
+import oc from 'three-orbit-controls'
+
 class CelestialObject{
     material;
     geometry;
@@ -74,12 +76,15 @@ camera.position.z = 5;
 // Allowing to calculate the new orbital position of celestial object.
 let tic = 0;
 
+const OrbitControls = oc(THREE);
+const orbitControls = new OrbitControls(camera, renderer.domElement);
+
 // Initialisation of your objects / materials / light
 let solarSystem = new THREE.Object3D();
 scene.add(solarSystem);
 
 let sun = new CelestialObject(
-    new THREE.SphereGeometry(0.4, 128, 128),
+    new THREE.SphereGeometry(1, 128, 128),
     new THREE.MeshBasicMaterial( { map: sunTexture } ),
     {x: 0, y: 0, z: 0, speed: 0, distance:0}
 );
@@ -88,7 +93,7 @@ solarSystem.add(sun.body);
 let mercury = new CelestialObject(
     new THREE.SphereGeometry(0.4, 128, 128),
     new THREE.MeshBasicMaterial( { map: mercuryTexture } ),
-    {x: 1, y: 1, z: 1, speed: 0.01, distance: 1},
+    {x: 1, y: 1, z: 1, speed: 0.01, distance: 2},
     sun
 );
 solarSystem.add(mercury.body);
