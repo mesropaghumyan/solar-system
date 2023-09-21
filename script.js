@@ -1,6 +1,21 @@
 import oc from 'three-orbit-controls';
 
-class CelestialObject{
+// Texture management
+const cubeTextureLoader = new THREE.CubeTextureLoader();
+const basicTextureLoader = new THREE.TextureLoader();
+const sunTexture = basicTextureLoader.load('./images/sun.jpeg');
+const mercuryTexture = basicTextureLoader.load('./images/mercury.jpg');
+const venusTexture = basicTextureLoader.load('./images/venus.jpg');
+const earthTexture = basicTextureLoader.load('./images/earth.jpg');
+const marsTexture = basicTextureLoader.load('./images/mars.jpg');
+const jupiterTexture = basicTextureLoader.load('./images/jupiter.jpg');
+const saturnTexture = basicTextureLoader.load('./images/saturn.jpg');
+const uranusTexture = basicTextureLoader.load('./images/uranus.jpg');
+const neptuneTexture = basicTextureLoader.load('./images/neptune.jpg');
+const plutoTexture = basicTextureLoader.load('./images/pluto.jpg');
+const moonTexture = basicTextureLoader.load('./images/moon.jpeg');
+
+class CelestialObject extends THREE.Object3D {
     material;
     geometry;
     body;
@@ -8,12 +23,39 @@ class CelestialObject{
     orbitalCenter;
 
     constructor( geometry, material, orbitalPara, orbitalCenter = null ){
+        super();
+
         this.geometry = geometry;
         this.material = material;
         this.body = new THREE.Mesh(this.geometry, this.material);
         this.body.scale.set(1,1,1);
         this.orbitalPara = orbitalPara;
         this.orbitalCenter = orbitalCenter;
+        this.add(this.body);
+
+        if(this.orbitalPara && this.orbitalCenter) {
+            this.ring = new THREE.Mesh(
+                new THREE.RingGeometry(
+                    this.orbitalPara.distance,
+                    this.orbitalPara.distance,
+                    0.03,
+                    128
+                ),
+                new THREE.MeshBasicMaterial(
+                    {
+                        color: 0xffffff,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.2
+                    }
+                )
+            )
+        }
+    }
+    addTo(scene) {
+        if (this.ring) {
+            scene.add(ring);
+        }
     }
 
     // Polar coordinates
@@ -21,13 +63,15 @@ class CelestialObject{
         this.body.position.x = (
             this.orbitalCenter.body.position.x +
             Math.cos(tic * this.orbitalPara.speed) *
-            this.orbitalPara.distance
+            this.orbitalPara.distance +
+            this.orbitalPara.eli
         );
 
         this.body.position.y = (
             this.orbitalCenter.body.position.y +
             Math.sin(tic * this.orbitalPara.speed) *
-            this.orbitalPara.distance
+            this.orbitalPara.distance -
+            this.orbitalPara.eli
         );
     }
 }
@@ -58,20 +102,27 @@ function initRenderer() {
     return renderer;
 }
 
-// Texture management
-const cubeTextureLoader = new THREE.CubeTextureLoader();
-const basicTextureLoader = new THREE.TextureLoader();
-const sunTexture = basicTextureLoader.load('./images/sun.jpeg');
-const mercuryTexture = basicTextureLoader.load('./images/mercury.jpg');
-const venusTexture = basicTextureLoader.load('./images/venus.jpg');
-const earthTexture = basicTextureLoader.load('./images/earth.jpg');
-const marsTexture = basicTextureLoader.load('./images/mars.jpg');
-const jupiterTexture = basicTextureLoader.load('./images/jupiter.jpg');
-const saturnTexture = basicTextureLoader.load('./images/saturn.jpg');
-const uranusTexture = basicTextureLoader.load('./images/uranus.jpg');
-const neptuneTexture = basicTextureLoader.load('./images/neptune.jpg');
-const plutoTexture = basicTextureLoader.load('./images/pluto.jpg');
-const moonTexture = basicTextureLoader.load('./images/moon.jpeg');
+function createPlanet(solarSystem, size, texture, orbitalPara, ring, orbitalCenter) {
+    let planet = new CelestialObject(
+        new THREE.SphereGeometry(size, 128, 128),
+        new THREE.MeshStandardMaterial( { map: texture } ),
+        {
+            x: orbitalPara.x,
+            y: orbitalPara.y,
+            z: orbitalPara.z,
+            eli: orbitalPara.eli,
+            speed: orbitalPara.speed,
+            distance: orbitalPara.distance
+        },
+        orbitalCenter
+    );
+
+    planet.body.castShadow = true;
+    planet.body.receiveShadow = true;
+    solarSystem.add(planet);
+
+    return planet;
+}
 
 // Initialisation of the scene / camera / renderer
 const renderer = initRenderer();
@@ -88,6 +139,7 @@ scene.background = cubeTextureLoader.load([
 scene.add(ambiantLight);
 
 const pointLight = new THREE.PointLight(0xFFFFFF, 2, 300);
+pointLight.castShadow = true;
 scene.add(pointLight);
 
 const camera = new THREE.PerspectiveCamera(
@@ -117,79 +169,16 @@ let sun = new CelestialObject(
 );
 solarSystem.add(sun.body);
 
-let mercury = new CelestialObject(
-    new THREE.SphereGeometry(0.2, 128, 128),
-    new THREE.MeshStandardMaterial( { map: mercuryTexture } ),
-    {x: 1, y: 1, z: 1, speed: 0.04, distance: 3},
-    sun
-);
-solarSystem.add(mercury.body);
-
-let venus = new CelestialObject(
-    new THREE.SphereGeometry(0.4, 128, 128),
-    new THREE.MeshStandardMaterial( { map: venusTexture } ),
-    {x: 2, y: 2, z: 2, speed: 0.015, distance: 6},
-    sun
-);
-solarSystem.add(venus.body);
-
-let earth = new CelestialObject(
-    new THREE.SphereGeometry(0.5, 128, 128),
-    new THREE.MeshStandardMaterial( { map: earthTexture } ),
-    {x: 3, y: 3, z: 3, speed: 0.01, distance: 9},
-    sun
-);
-solarSystem.add(earth.body);
-
-
-
-let mars = new CelestialObject(
-    new THREE.SphereGeometry(0.3, 128, 128),
-    new THREE.MeshStandardMaterial( { map: marsTexture } ),
-    {x: 4, y: 4, z: 4, speed: 0.008, distance: 12},
-    sun
-);
-solarSystem.add(mars.body);
-
-let jupiter = new CelestialObject(
-    new THREE.SphereGeometry(0.9, 128, 128),
-    new THREE.MeshStandardMaterial( { map: jupiterTexture } ),
-    {x: 5, y: 5, z: 5, speed: 0.002, distance: 15},
-    sun
-);
-solarSystem.add(jupiter.body);
-
-let saturn = new CelestialObject(
-    new THREE.SphereGeometry(0.8, 128, 128),
-    new THREE.MeshStandardMaterial( { map: saturnTexture } ),
-    {x: 6, y: 6, z: 6, speed: 0.0009, distance: 18},
-    sun
-);
-solarSystem.add(saturn.body);
-
-let uranus = new CelestialObject(
-    new THREE.SphereGeometry(0.7, 128, 128),
-    new THREE.MeshStandardMaterial( { map: uranusTexture } ),
-    {x: 7, y: 7, z: 7, speed: 0.0004, distance: 21},
-    sun
-);
-solarSystem.add(uranus.body);
-
-let neptune = new CelestialObject(
-    new THREE.SphereGeometry(0.7, 128, 128),
-    new THREE.MeshStandardMaterial( { map: neptuneTexture } ),
-    {x: 8, y: 8, z: 8, speed: 0.0001, distance: 24},
-    sun
-);
-solarSystem.add(neptune.body);
-
-let pluto = new CelestialObject(
-    new THREE.SphereGeometry(0.7, 128, 128),
-    new THREE.MeshStandardMaterial( { map: plutoTexture } ),
-    {x: 9, y: 9, z: 9, speed: 0.00007, distance: 27},
-    sun
-);
-solarSystem.add(pluto.body);
+let mercury = createPlanet(solarSystem, 0.2, mercuryTexture, {x: 1, y: 1, z: 1, eli: 0.205, speed: 0.04, distance: 3}, null, sun);
+let venus = createPlanet(solarSystem, 0.4, venusTexture, {x: 2, y: 2, z: 2, eli: 0.006,speed: -0.015, distance: 6}, null, sun);
+let earth = createPlanet(solarSystem, 0.5, earthTexture, {x: 3, y: 3, z: 3, eli: 0.016,speed: 0.01, distance: 9}, null, sun);
+let moon = createPlanet(solarSystem, 0.1, moonTexture, {x: 0, y: 0, z: 0, eli: 0.0549,speed: 0.05, distance: 1}, null, earth);
+let mars = createPlanet(solarSystem, 0.3, marsTexture,  {x: 4, y: 4, z: 4, eli: 0.093,speed: 0.008, distance: 12}, null, sun);
+let jupiter = createPlanet(solarSystem, 0.9, jupiterTexture, {x: 5, y: 5, z: 5, eli: 0.048,speed: 0.002, distance: 15}, null, sun);
+let saturn = createPlanet(solarSystem, 0.8, saturnTexture, {x: 6, y: 6, z: 6, eli: 0.054,speed: 0.0009, distance: 18}, null, sun);
+let uranus = createPlanet(solarSystem, 0.7, uranusTexture, {x: 7, y: 7, z: 7, eli: 0.047,speed: -0.0004, distance: 21}, null, sun);
+let neptune = createPlanet(solarSystem, 0.3, neptuneTexture, {x: 8, y: 8, z: 8, eli: 0.008,speed: 0.0001, distance: 24}, null, sun);
+let pluto = createPlanet(solarSystem, 0.1, plutoTexture, {x: 9, y: 9, z: 9, eli: 0.002,speed: 0.00007, distance: 27}, null, sun);
 
 // This is executed for each frames
 function render() {
@@ -205,6 +194,7 @@ function render() {
     uranus.move(tic)
     neptune.move(tic)
     pluto.move(tic)
+    moon.move(tic)
     tic += 1;
 
     //Self-rotation
@@ -230,6 +220,24 @@ function render() {
     neptune.body.rotateY(0.0001);
     pluto.body.rotateY(0.00007);
 
-    renderer.render( scene, camera );
+    const planetes = [mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
+    planetes.forEach(planete1 => {
+        planetes.forEach(planete2 => {
+            if (planete1 !== planete2) {
+                const distance = planete1.body.position.distanceTo(planete2.body.position);
+
+                if (distance < planete1.rayon + planete2.rayon) {
+                    // Appliquer un effet d'ombre ici
+                    // Par exemple, assombrir le matériau de planete2
+                    planete2.body.material.color.set(0x555555);
+                } else {
+                    // Réinitialiser le matériau de planete2 si les planètes ne se croisent pas
+                    planete2.body.material.color.set(0xFFFFFF);
+                }
+            }
+        });
+    });
+
+    renderer.render(scene, camera); // remplace renderer.render(scene, camera);
 }
 render();

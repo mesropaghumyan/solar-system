@@ -1,1 +1,1 @@
-{ "dependencies": { "three": "^0.156.1", "three-orbit-controls": "^82.1.0", "vite": "^4.4.9" } }
+{ "dependencies": { "postprocessing": "^6.33.1", "three": "^0.156.1", "three-orbit-controls": "^82.1.0", "vite": "^4.4.9" } }
