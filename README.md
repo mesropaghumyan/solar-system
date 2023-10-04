@@ -2,6 +2,8 @@
 
 This project is a 3D simulation of the solar system using Three.js. You can explore the solar system by moving your mouse to navigate through space and zoom in on planets. It's a fun and educational way to learn about our celestial neighbors! 🚀🌠
 
+![Solar System](illustration.png)
+
 ## Installation 📦
 
 Follow these steps to get the project up and running on your local machine:
